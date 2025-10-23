@@ -32,10 +32,9 @@ To run the client flom the client dir use this:
 ```
 
 Alternatively, you can use the provided Makefile target:
-   make run ARGS="**ClientName**"
 
-Example:
-   make run ARGS="Joao"
+```bash
+   make run ARGS="**ClientName**"
+```
 
 ---
-
