@@ -7,11 +7,17 @@ It reads information from clients.txt and identifies registered clients.
 
 ## Build Instructions
 
-1. Navigate to the client directory:
-   cd client
+1. Navigate to the client directory if not inside of it already:
+
+```bash
+cd client
+```
 
 2. Compile the project:
-   make
+
+```bash
+make
+```
 
 This will create the executable inside the build/ directory.
 
