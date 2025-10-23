@@ -12,7 +12,7 @@ HEADERS := $(wildcard *.h)
 OBJ := $(patsubst %.c,build/%.o,$(SRC))
 
 # Output binary (inside build folder)
-TARGET := build/controller
+TARGET := build/vehicle
 
 # Default target: clean then build
 all: clean $(TARGET)
