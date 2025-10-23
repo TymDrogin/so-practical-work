@@ -1,0 +1,38 @@
+client is an interface program. It validates users, adds new one if nesseserry
+There can be many instanses of client application running at the same time:
+
+-- All programs should have defined "kill" sequenses. free up the resources, save things, whatever
+-- Boot order matters or not, i am not sure 
+
+-- Max 30 users 
+-- Max 10 cars or more 
+
+
+-- thread pools would be nice, since when the client boots up there is a handshake process of sorts,
+-- and all the relative client information can be packed in a job
+
+
+
+
+Big notes: 
+    -- Use of many named pipes is penalised, and this is a big nuh huh, thats a yiash
+
+Client architecture: 
+-- Client application talks with the controller/controllers through named pipes
+-- There can be many client programs being ran at the same time to simulate many different clients interracting with the application is a whole
+
+-- If there is going to be a need to block the same client from "launching" application, one of the ways to handle it is:
+    Forks? Well. If there were a ClientManager application it could fork() + exec() the client instanses,
+    while also deciding should it be forked(client might be the same)
+    Another solution is to delegate a job of validating clients to the controller. Controller can keep the registry of active sessions,
+    and when a client application is launched and the user name has been passed, it can send a signal or open a pipe and veryfy if it is legal to make a session.
+    if it is illigal, it is as simple as sending signal from controller to the client, and make a client application have a sigaction defined just for that case. 
+    Try again kind of a deal 
+-- Project specs say that controller-client talk with the use of named pipes, so it is a [QUESTION] if i can use signals for something as simple as that 
+
+
+
+Controller architecture:
+-- Can i use  thread pools to service clients
+-- Or maybe allocate 30 threads with event loops to handle connections 
+-- 

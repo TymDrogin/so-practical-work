@@ -14,8 +14,8 @@ OBJ := $(patsubst %.c,build/%.o,$(SRC))
 # Output binary (inside build folder)
 TARGET := build/client
 
-# Default target
-all: $(TARGET)
+# Default target: clean then build
+all: clean $(TARGET)
 
 # Link object files into final executable
 $(TARGET): $(OBJ)
@@ -30,12 +30,12 @@ build/%.o: %.c $(HEADERS)
 clean:
 	rm -rf build
 
-# Rebuild from scratch
+# Rebuild from scratch (alias)
 rebuild: clean all
 
 # Convenience target to run the program
 run: $(TARGET)
 	# Run from parent directory so relative paths like "../file.txt" work
-	cd build && ./main
+	cd build && ./client
 
 .PHONY: all clean rebuild run
