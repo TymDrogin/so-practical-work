@@ -2,14 +2,14 @@
 
 # Compiler and flags
 CC := gcc
-CFLAGS := -std=c11 -O2 -Wall -Wextra
+CFLAGS := -std=c11 -O2 -Wall -Wextra -Iinclude  # include headers from include/
 
 # Source and header files
-SRC := $(wildcard *.c)
-HEADERS := $(wildcard *.h)
+SRC := $(wildcard src/*.c)
+HEADERS := $(wildcard include/*.h)
 
 # Object files (in build folder)
-OBJ := $(patsubst %.c,build/%.o,$(SRC))
+OBJ := $(patsubst src/%.c,build/%.o,$(SRC))
 
 # Output binary (inside build folder)
 TARGET := build/client
@@ -22,7 +22,7 @@ $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
 
 # Compile each .c file into a .o file (create build dir if missing)
-build/%.o: %.c $(HEADERS)
+build/%.o: src/%.c $(HEADERS)
 	@mkdir -p build
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -36,6 +36,6 @@ rebuild: clean all
 # Convenience target to run the program
 run: $(TARGET)
 	# Run from parent directory so relative paths like "../file.txt" work
-	cd build && ./client
+	cd build && ./controller
 
 .PHONY: all clean rebuild run

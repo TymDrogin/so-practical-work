@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "signal.h": "c"
+        "signal.h": "c",
+        "entry_fifo_listener.h": "c",
+        "types.h": "c"
     }
 }
