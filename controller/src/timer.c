@@ -25,10 +25,8 @@ void* timer_worker(void* arg) {
         while(is_paused) {
             pthread_cond_wait(&timer_cond, &timer_mutex);
         }
-
         (*ticks_counter)++;
-        printf("Timer tick: %d\n", *ticks_counter);
-
+        
         pthread_mutex_unlock(&timer_mutex);
         sleep(TIMER_TICK_SPEED_SECONDS);
     }

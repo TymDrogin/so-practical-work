@@ -9,15 +9,14 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 
 #include "common.h"
 #include "settings.h"
+#include "queue.h"
 
-// Start the entry fifo listener thread
-// In the future, this function will accept a pointer to a queue where it will enqueue incoming client connection requests
-// For now, it just prints the received client names to stdout
-void start_entry_fifo_listener_thread(void);
-
+// Start the entry fifo listener thread. It will read client names from the fifo and enqueue them to the provided client queue.
+void start_entry_fifo_listener_thread(queue* client_connection_req_queue);
+queue* dequeue_client_connection_request(queue* client_connection_req_queue);
