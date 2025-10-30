@@ -15,7 +15,6 @@
 // Requested services 
 // vehicle can have a pipe with client name + destination 
 
-// Sessi
 
 // Fifo of pending requests
 struct service_request {
