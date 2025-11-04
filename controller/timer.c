@@ -1,12 +1,14 @@
 #include "timer.h"
+#include "settings.h"
+#include "common.h"
+
 
 static pthread_t timer_thread;
 static int is_spawned = 0;
 static int is_paused = 0;
 
-// Used to safely mutate/read timer ticks
 static pthread_mutex_t timer_mutex = PTHREAD_MUTEX_INITIALIZER;
-// Used to pause/resume the timer thread
+
 static pthread_cond_t timer_cond = PTHREAD_COND_INITIALIZER;
 
 static int timer_ticks = 0;
@@ -22,8 +24,10 @@ void* timer_worker(void* arg) {
         while(is_paused) {
             pthread_cond_wait(&timer_cond, &timer_mutex);
         }
+
         (*ticks_counter)++;
-        
+        printf("Timer tick: %d\n", *ticks_counter);
+
         pthread_mutex_unlock(&timer_mutex);
         sleep(TIMER_TICK_SPEED_SECONDS);
     }

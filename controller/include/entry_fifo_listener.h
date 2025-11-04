@@ -12,8 +12,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <string.h>
 
-#include "common.h"
 #include "settings.h"
 #include "queue.h"
 

@@ -11,36 +11,45 @@ void* entry_fifo_worker(void* arg) {
 
     int fd = open(CONTROLLER_ENTRY_FIFO_PATH, O_RDONLY);
     if (fd == -1) {
-        perror(ERROR "Entry fifo listner could not open controller entry FIFO for reading");
+        perror(ERROR "Could not open controller entry FIFO for reading");
         return NULL;
     }
 
     while (1) {
         ssize_t bytes_read = read(fd, buffer, sizeof(buffer) - 1);
-        // Error handling
         if (bytes_read <= 0) {
-            if (bytes_read == 0) continue; // EOF, continue reading
+            if (bytes_read == 0) {
+                // EOF – writer closed the FIFO, reopen it
+                close(fd);
+                fd = open(CONTROLLER_ENTRY_FIFO_PATH, O_RDONLY);
+                if (fd == -1) {
+                    perror(ERROR "Reopening FIFO failed");
+                    return NULL;
+                }
+                continue;
+            }
 
-            if (errno == EINTR) continue; // interrupted by signal, safe to retry
+            if (errno == EINTR)
+                continue; // Retry after signal
 
-            // Other reading errors
             perror(ERROR "Error reading from controller entry FIFO");
-            exit(1);
+            close(fd);
+            return NULL;
         }
-        // Enqueue data to the client queue
+
         buffer[bytes_read] = '\0';
-        char* client_name = malloc(bytes_read + 1);
+        size_t len = strlen(buffer);
+        char* client_name = malloc(len + 1);
         if (!client_name) {
-            perror(ERROR "Could not allocate memory for client name");
-            exit(1);
+            perror(ERROR "Memory allocation failed");
+            continue;
         }
         strcpy(client_name, buffer);
-        
-        // Thread safe enqueue
-        if(!enqueue(client_queue, client_name)) {
+
+        if (!q_enqueue(client_queue, client_name)) {
             perror(ERROR "Could not enqueue client connection request");
             free(client_name);
-        };
+        }
     }
 
     close(fd);

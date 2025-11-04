@@ -1,7 +1,7 @@
 #include "queue.h"
 
 
-queue* create_queue(int capacity) {
+queue* q_create_queue(int capacity) {
     queue* q = (queue*)malloc(sizeof(queue));
     if(!q) {
         perror(ERROR "Failed to allocate memory for queue.\n");
@@ -27,26 +27,25 @@ queue* create_queue(int capacity) {
 
     return q;
 }
-
-int is_empty(queue* q) {
+int q_is_empty(queue* q) {
     pthread_mutex_lock(&q->mutex);
     int empty = q->count == 0;
     pthread_mutex_unlock(&q->mutex);
     return empty;
 }
-int is_full(queue* q) {
+int q_is_full(queue* q) {
     pthread_mutex_lock(&q->mutex);
     int full = q->count == q->capacity;
     pthread_mutex_unlock(&q->mutex);
     return full;
 }
-int queue_size(queue* q) {
+int q_queue_size(queue* q) {
     pthread_mutex_lock(&q->mutex);
     int size = q->count;
     pthread_mutex_unlock(&q->mutex);
     return size;
 }
-int enqueue(queue* q, void* item) {
+int q_enqueue(queue* q, void* item) {
     pthread_mutex_lock(&q->mutex);
 
     // cannot use the is_full function here because of mutex deadlock
@@ -63,7 +62,7 @@ int enqueue(queue* q, void* item) {
     pthread_mutex_unlock(&q->mutex);
     return 1;
 }
-void* dequeue(queue* q) {
+void* q_dequeue(queue* q) {
     pthread_mutex_lock(&q->mutex);
     int is_empty = q->count == 0;
     if (is_empty) {
@@ -75,12 +74,27 @@ void* dequeue(queue* q) {
     pthread_mutex_unlock(&q->mutex);
     return item;
 }
-void free_queue(queue* q) {
-    if(!q) return;
+void q_free_queue(queue* q, free_func_t free_func) {
+    if (!q) return;
+
     pthread_mutex_lock(&q->mutex);
-    if(q->data) {
-        free(q->data);
+
+    // Dequeue and free each element
+    while (q->count > 0) {
+        void* item = q->data[q->front];
+        q->front = (q->front + 1) % q->capacity;
+        q->count--;
+
+        if (item) {
+            // use custom funciton if passed
+            if (free_fun)
+                free_fun(item);
+            else
+                free(item);
+        }
     }
+
+    free(q->data);
     pthread_mutex_unlock(&q->mutex);
     pthread_mutex_destroy(&q->mutex);
     free(q);

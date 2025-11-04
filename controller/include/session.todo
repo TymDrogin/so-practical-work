@@ -1,0 +1,61 @@
+#ifndef SESSION_H
+#define SESSION_H
+
+#include "settings.h"
+#include "queue.h"
+
+// Client sessions stores all relative information about a particular
+// Connected client, such as:
+// Name, services requested, current(if any) active service and some other metadata
+// This information also is going to be passed to individual threads responsible for each sessions
+// That is why there might be a need to pass a "manager" mutex, to ensure the manager 
+// Reads | Writes only fresh, relative and intact data
+// Or the manager might lock out the each client one by one 
+typedef struct client_session {
+    char* client_name;
+    // Is session is active or has been termineted by the client_session_worker thread 
+    int is_active;
+    queue* requests;// TODO: need some ordering or the way to find the freshest request
+
+    // Active service (can be null )
+
+    // Client thread handle
+
+    // Reference(or pid) to the allocated vehicle to this client 
+
+
+} client_session;
+
+
+
+// Session manager is the heart of the project. It creates client threads, manages data, gives an api to the controller to get the state of the each client,
+// Requests, 
+typedef client_session_manager {
+    client_session* sessions;
+    int capacity; // Maximum number of client sessions
+    int count;    // Number of current open sessions 
+    pthread_mutex_t manager_mutex;
+
+}
+// 0 for success, 1 for the same client is already connected, -1 there is no space
+int connect_client(client_session_manager* manager, char* client_name);
+void disconnect_client(client_session_manager* manager, char* client_name);
+
+void list_connected_clients_with_states(client_session_manager* manager);
+
+
+
+int disconnect_client();
+// Creates the "Session"
+client_session_manager* create_session_manager(int capacity);
+
+
+#endif // SESSION_H
+
+
+
+
+
+
+
+

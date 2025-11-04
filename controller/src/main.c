@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
-#include "common.h"
+#include "utils.h"
 #include "timer.h"
 #include "entry_fifo_listener.h"
 #include "queue.h"
@@ -30,7 +30,7 @@ void init(void) {
 
     start_timer();
 
-    client_connection_req_queue = create_queue(CLIENT_CON_REQ_QUEUE_CAPACITY);
+    client_connection_req_queue = q_create_queue(CLIENT_CON_REQ_QUEUE_CAPACITY);
     if (client_connection_req_queue == NULL) {
         perror(ERROR "Could not create client connection request queue");
         exit(1);
@@ -54,11 +54,11 @@ void init(void) {
 int main(int argc, char *argv[]) {
     init();
     void* msg;
-    while(queue_size(client_connection_req_queue) < 5) {
+    while(q_queue_size(client_connection_req_queue) < 5) {
         sleep(1);
-        printf("Waiting for client connection requests... Current queue size: %d\n", queue_size(client_connection_req_queue));
+        printf("Waiting for client connection requests... Current queue size: %d\n", q_queue_size(client_connection_req_queue));
     }
-    while ((msg = dequeue(client_connection_req_queue)) != NULL) {
+    while ((msg = q_dequeue(client_connection_req_queue)) != NULL) {
         printf("Processing client connection request: %s\n", (char*)msg);
     }
         
