@@ -2,46 +2,93 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <signal.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <string.h>
+#include "settings.h"
+
+static char* client_name;
+static char* destination;
+static int distance_to_travel;
+static int tenth_of_distance_to_travel;
+static int vehicle_id;
+static int distance_traveled = 0;
 
 
-#define COLOR_RED     "\x1b[31m"
-#define COLOR_PURPLE  "\x1b[35m"
-#define COLOR_RESET   "\x1b[0m"
-#define COLOR_GREEN   "\x1b[32m"
-#define COLOR_YELLOW  "\x1b[33m"
-
-#define VEHICLE COLOR_GREEN "[VEHICLE] " COLOR_RESET
-
-
-void kill_handler(int signum) {
-    printf(VEHICLE "Vehicle process received termination signal. Exiting...\n");
+// Service cancelation routine
+void service_termination_handler(int signum) {
+    char* termination_message = "Vehicle process received termination signal. Exiting...\n";
+    write(STDOUT_FILENO, "Vehicle process received termination signal. Exiting...\n", strlen(termination_message));
     exit(0);
 }
 
+// Main vehicle loop 
+void service_start_handler(int signum) {
+    printf(VEHICLE "Client entered the vehicle, starting the ride\n");
+    fflush(stdout);
 
-int main(int argc, char *argv[]) {
+    while (1) {
+        distance_traveled++;
 
-    struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO;
-    sa.sa_sigaction = kill_handler;
-    sigaction(SIGINT, &sa, NULL);
+        if (distance_traveled % tenth_of_distance_to_travel == 0) {
+            printf("Traveled tenth of the distance (%d). Target: %d\n",
+                   tenth_of_distance_to_travel, distance_to_travel);
+            printf("Total distance traveled: %d\n", distance_traveled);
+            fflush(stdout);
+        }
 
-    int pid = getpid();
-    int ppid = getppid();
+        if (distance_traveled >= distance_to_travel)
+            break;
 
-    printf(VEHICLE"Vehicle process started. PID: %d, Parent PID: %d\n", pid, ppid);   
-    
-
-    while (1)
-    {
-        sleep(5);
-        printf(VEHICLE "Wroom wroom! Vehicle PID: %d is running...\n", pid);
+        usleep(TIMER_TICK_SPEED_MILLISECONDS * 1000);
     }
-    
+
+    printf("Finished the service, informing client\n");
+    fflush(stdout);
+}
+
+void init() {
+    struct sigaction start_action = {0};
+    start_action.sa_handler = service_start_handler;
+    sigaction(SIGUSR2, &start_action, NULL);
+
+    struct sigaction termination_action = {0};
+    termination_action.sa_handler = service_termination_handler;
+    sigaction(SIGUSR1, &termination_action, NULL);
+}
+
+
+// ARGS ./vehicle <client_name> <destination> <distance_to_travel> <id_of_car>
+//       0        1             2             3                    4 
+
+// Check if client pipe exists and open, steps 
+// Write a message (car to destination is ready + pid of car)
+// Client sends a message enter to the controller that changes the state of the client session info 
+// And sends kill SIGUSR2 to start the car. 
+// Client also can exit or cancel the service that might 
+int main(int argc, char *argv[]) {
+    if (argc != 5) {
+        fprintf(stderr, "Error: Invalid number of arguments, expected 5, got %d\n", argc);
+        exit(1);
+    }
+
+    client_name = argv[CLIENT_NAME];
+    destination = argv[DESTINATION];
+    distance_to_travel = atoi(argv[DISTANCE]);
+    vehicle_id = atoi(argv[VEHICLE_ID]);
+    tenth_of_distance_to_travel = distance_to_travel / 10;
+
+    setbuf(stdout, NULL); // disable buffering
+
+    printf("Vehicle process has been started, pid: %d\n", getpid());
+    printf("Client: %s, Destination: %s, Distance: %d, ID: %d\n",
+           client_name, destination, distance_to_travel, vehicle_id);
+
+    init();
+
+    while(1)
+        pause();
 
     return 0;
 }

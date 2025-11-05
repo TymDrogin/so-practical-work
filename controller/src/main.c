@@ -1,8 +1,6 @@
-#define _POSIX_C_SOURCE 200809L
-
 #include "utils.h"
 #include "timer.h"
-#include "entry_fifo_listener.h"
+#include "connection_request_listener.h"
 #include "queue.h"
 
 #include <stdio.h>

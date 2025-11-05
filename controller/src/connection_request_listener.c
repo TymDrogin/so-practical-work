@@ -1,11 +1,12 @@
-#include "entry_fifo_listener.h"
+#include "connection_request_listener.h"
 
-static pthread_t entry_fifo_listner_thread; 
+static pthread_t connection_request_listener_thread; 
 
 // Ensures singleton-like behavior, only one thread can be spawned
 static int is_spawned = 0;
 
-void* entry_fifo_worker(void* arg) {
+// This function assumes there is going to be only one line per read call in the data
+void* connection_request_worker(void* arg) {
     queue* client_queue = (queue*)arg;
     char buffer[128];
 
@@ -57,7 +58,7 @@ void* entry_fifo_worker(void* arg) {
 }
 
 // Perchance move pipe creation logic out of here to the controller initialization code
-void start_entry_fifo_listener_thread(queue* client_connection_req_queue) {
+void start_connection_request_listener_thread(queue* client_connection_req_queue) {
     // Remove the pipe if it already exists
     unlink(CONTROLLER_ENTRY_FIFO_PATH); 
 
@@ -75,9 +76,11 @@ void start_entry_fifo_listener_thread(queue* client_connection_req_queue) {
         exit(1);
     }
 
-    entry_fifo_listner_thread = pthread_create(&entry_fifo_listner_thread, NULL, entry_fifo_worker, client_connection_req_queue);
+    connection_request_listener_thread = pthread_create(&connection_request_listener_thread, NULL, connection_request_worker, client_connection_req_queue);
     is_spawned = 1;
-    if (entry_fifo_listner_thread != 0) {
+    if (connection_request_listener_thread
+    
+    != 0) {
         perror(ERROR "Failed to create entry fifo listener thread.\n");
         exit(1);
     };

@@ -86,8 +86,7 @@ void q_free_queue(queue* q, free_func_t free_func) {
         q->count--;
 
         if (item) {
-            // use custom funciton if passed
-            if (free_fun)
+            if (free_func)
                 free_fun(item);
             else
                 free(item);
