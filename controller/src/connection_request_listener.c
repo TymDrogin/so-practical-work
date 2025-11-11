@@ -76,11 +76,9 @@ void start_connection_request_listener_thread(queue* client_connection_req_queue
         exit(1);
     }
 
-    connection_request_listener_thread = pthread_create(&connection_request_listener_thread, NULL, connection_request_worker, client_connection_req_queue);
+    int status = pthread_create(&connection_request_listener_thread, NULL, connection_request_worker, client_connection_req_queue);
     is_spawned = 1;
-    if (connection_request_listener_thread
-    
-    != 0) {
+    if (status != 0) {
         perror(ERROR "Failed to create entry fifo listener thread.\n");
         exit(1);
     };

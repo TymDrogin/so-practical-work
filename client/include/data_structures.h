@@ -1,7 +1,7 @@
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef DATA_STRUCTURES_H
+#define DATA_STRUCTURES_H
 
-#include "settings.h"
+#include "common.h"
 
 #include <stdlib.h>
 #include <pthread.h>
@@ -34,4 +34,4 @@ int q_enqueue(queue* q, void* item);
 void* q_dequeue(queue* q);
 void q_free_queue(queue* q, free_func_t free_func);
 
-#endif // QUEUE_H
+#endif // DATA_STRUCTURES_H

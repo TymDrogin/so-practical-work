@@ -15,8 +15,10 @@
 #include <string.h>
 
 #include "settings.h"
-#include "queue.h"
+#include "utils.h"
+#include "data_structures.h"
 
-// Start the entry fifo listener thread. It will read client names from the fifo and enqueue them to the provided client queue.
+// Start the connection request fifo listener thread. It will read client names from the fifo and enqueue them to the provided client queue.
+
 void start_connection_request_listener_thread(queue* client_connection_req_queue);
 queue* dequeue_client_connection_request(queue* client_connection_req_queue);

@@ -1,7 +1,7 @@
 #include "utils.h"
 #include "timer.h"
 #include "connection_request_listener.h"
-#include "queue.h"
+#include "data_structures.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@ void init(void) {
         perror(ERROR "Could not create client connection request queue");
         exit(1);
     }
-    start_entry_fifo_listener_thread(client_connection_req_queue);
+    start_connection_request_listener_thread(client_connection_req_queue);
 
     struct sigaction sa;
     sa.sa_handler = cleanup;

@@ -1,4 +1,4 @@
-#include "queue.h"
+#include "data_structures.h"
 
 
 queue* q_create_queue(int capacity) {
@@ -87,7 +87,7 @@ void q_free_queue(queue* q, free_func_t free_func) {
 
         if (item) {
             if (free_func)
-                free_fun(item);
+                free_func(item);
             else
                 free(item);
         }

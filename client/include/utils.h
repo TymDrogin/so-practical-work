@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "settings.h"
+#include "common.h"
 #include "data_structures.h"
 
 #include <pthread.h>
@@ -16,18 +16,13 @@
 #include <sys/types.h>
 #include <string.h>
 
-typedef struct id_generator {
-    int id;
-    pthread_mutex_t mutex;
-    
-} id_generator;
-
-void init_id_generator(id_generator* generator);
-int generate_id(id_generator* generator);
-
 
 int is_named_pipe_exists(char* pipe_path);
-void create_named_pipe(char* pipe_path);
+void create_named_pipe(char* pipe_name, char* pipe_path_base);
+void remove_named_pipe(char* pipe_name, char* pipe_path_base);
+
+int is_controller_entry_pipe_exist(void);
+int is_client_pipe_exist(char* client_name);
 
 
 
