@@ -4,6 +4,7 @@
 #include "settings.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <pthread.h>
 
 typedef void (*free_func_t)(void*);
@@ -21,17 +22,38 @@ typedef struct queue {
     int capacity;
 
     pthread_mutex_t mutex; // Mutex for thread safety
+    free_func_t free_func; // Custom free function 
 } queue;
 
-// Allocates the queue and initializes the mutex
-// This functions do not call each other to avoid dead locks. Such as, code from enqueue has 
-queue* q_create_queue(int capacity);
-
+queue* q_create_queue(int capacity, free_func_t free_func);
 int q_is_empty(queue* q);
 int q_is_full(queue* q);
 int q_queue_size(queue* q);
 int q_enqueue(queue* q, void* item);
 void* q_dequeue(queue* q);
-void q_free_queue(queue* q, free_func_t free_func);
+void q_destroy_queue(queue* q);
+
+// Un
+typedef struct array {
+    void** data;
+
+    int capacity;
+    int size;
+
+    free_func_t free_func;
+} array;
+
+array* d_create_array(int capacity, free_func_t free_func);
+
+int d_push(array* arr, void* item);
+void* d_pop(array* arr);
+
+void* d_get(const array* arr, const int inxex);
+int d_remove(array* arr, const int index);
+
+
+int d_size(const array* arr);
+int d_capacity(const array* arr);
+void d_destroy_array(array* arr);
 
 #endif // DATA_STRUCTURES_H
