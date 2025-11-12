@@ -28,7 +28,7 @@ void init(void) {
 
     start_timer();
 
-    client_connection_req_queue = q_create_queue(CLIENT_CON_REQ_QUEUE_CAPACITY);
+    client_connection_req_queue = q_create_queue(CLIENT_CON_REQ_QUEUE_CAPACITY, NULL);
     if (client_connection_req_queue == NULL) {
         perror(ERROR "Could not create client connection request queue");
         exit(1);
