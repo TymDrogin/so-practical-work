@@ -8,7 +8,7 @@ static int is_spawned = 0;
 // This function assumes there is going to be only one line per read call in the data
 void* connection_request_worker(void* arg) {
     queue* client_queue = (queue*)arg;
-    char buffer[128];
+    char buffer[512];
 
     int fd = open(CONTROLLER_ENTRY_FIFO_PATH, O_RDONLY);
     if (fd == -1) {
@@ -17,7 +17,8 @@ void* connection_request_worker(void* arg) {
     }
 
     while (1) {
-        ssize_t bytes_read = read(fd, buffer, sizeof(buffer) - 1);
+        // Read from pipe
+        ssize_t bytes_read = read(fd, buffer, sizeof(buffer));
         if (bytes_read <= 0) {
             if (bytes_read == 0) {
                 // EOF – writer closed the FIFO, reopen it
@@ -29,33 +30,25 @@ void* connection_request_worker(void* arg) {
                 }
                 continue;
             }
-
             if (errno == EINTR)
-                continue; // Retry after signal
+                continue; 
 
             perror(ERROR "Error reading from controller entry FIFO");
             close(fd);
             return NULL;
         }
-
         buffer[bytes_read] = '\0';
-        size_t len = strlen(buffer);
-        char* client_name = malloc(len + 1);
-        if (!client_name) {
-            perror(ERROR "Memory allocation failed");
-            continue;
-        }
-        strcpy(client_name, buffer);
-
-        if (!q_enqueue(client_queue, client_name)) {
-            perror(ERROR "Could not enqueue client connection request");
-            free(client_name);
+        // Process buffered up data 
+        if (read_lines_from_buffer_to_queue(client_queue, buffer, bytes_read) != 0) {
+            close(fd);
+            return NULL;
         }
     }
 
     close(fd);
     return NULL;
 }
+
 
 // Perchance move pipe creation logic out of here to the controller initialization code
 void start_connection_request_listener_thread(queue* client_connection_req_queue) {
@@ -76,9 +69,9 @@ void start_connection_request_listener_thread(queue* client_connection_req_queue
         exit(1);
     }
 
-    int status = pthread_create(&connection_request_listener_thread, NULL, connection_request_worker, client_connection_req_queue);
+    connection_request_listener_thread = pthread_create(&connection_request_listener_thread, NULL, connection_request_worker, client_connection_req_queue);
     is_spawned = 1;
-    if (status != 0) {
+    if (connection_request_listener_thread != 0) {
         perror(ERROR "Failed to create entry fifo listener thread.\n");
         exit(1);
     };
