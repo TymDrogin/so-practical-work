@@ -73,7 +73,7 @@ int read_lines_from_buffer_to_queue(queue* q, const char* buffer, size_t buffer_
     const char* line;
 
     while ((line = get_line_from_buffer(buffer, buffer_size, &pos, &len)) != NULL) {
-        if (len == 0) continue;
+        if (len == 0) continue; // Skip empty lines
 
         char* copy = malloc(len + 1);
         if (!copy) {
@@ -83,7 +83,7 @@ int read_lines_from_buffer_to_queue(queue* q, const char* buffer, size_t buffer_
 
         memcpy(copy, line, len);
         copy[len] = '\0';
-
+        // Enque the client
         if (!q_enqueue(q, copy)) {
             printf(ERROR "Could not enqueue line read from the buffer");
             free(copy);
