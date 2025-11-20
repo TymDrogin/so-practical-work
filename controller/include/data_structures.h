@@ -15,17 +15,19 @@ typedef void (*free_func_t)(void*);
 // This implementation is based on the https://www.geeksforgeeks.org/dsa/introduction-to-circular-queue/ article,
 // But adapted for thread safety and void* data storage
 typedef struct queue {
-    void** data;       // Array of void pointers to hold the data [void*, void*, ...]
+    void** data;       
     int front;
     int rear;
     int count;
     int capacity;
 
-    pthread_mutex_t mutex; // Mutex for thread safety
-    free_func_t free_func; // Custom free function 
+    bool is_thread_safe;
+
+    pthread_mutex_t mutex; 
+    free_func_t free_func;  
 } queue;
 
-queue* q_create_queue(int capacity, free_func_t free_func);
+queue* q_create_queue(int capacity, bool is_thread_safe, free_func_t free_func);
 int q_is_empty(queue* q);
 int q_is_full(queue* q);
 int q_queue_size(queue* q);

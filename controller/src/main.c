@@ -2,6 +2,7 @@
 #include "timer.h"
 #include "connection_request_listener.h"
 #include "data_structures.h"
+#include "vehicle.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +20,7 @@ static queue* client_connection_req_queue;
 
 void cleanup(int signum) {
     printf("\n" CONTROLLER "Caught signal %d, cleaning up...\n", signum);
-    unlink(CONTROLLER_ENTRY_FIFO_PATH); // Remove the FIFO
+    unlink(CONTROLLER_CONNECITON_FIFO_PATH); // Remove the FIFO
     exit(0);
 }
 
@@ -28,7 +29,7 @@ void init(void) {
 
     start_timer();
 
-    client_connection_req_queue = q_create_queue(CLIENT_CON_REQ_QUEUE_CAPACITY, NULL);
+    client_connection_req_queue = q_create_queue(CLIENT_CON_REQ_QUEUE_CAPACITY, true, NULL);
     if (client_connection_req_queue == NULL) {
         perror(ERROR "Could not create client connection request queue");
         exit(1);
@@ -52,14 +53,19 @@ void init(void) {
 int main(int argc, char *argv[]) {
     init();
     void* msg;
-    while(q_queue_size(client_connection_req_queue) < 5) {
-        sleep(1);
-        printf("Waiting for client connection requests... Current queue size: %d\n", q_queue_size(client_connection_req_queue));
-    }
-    while ((msg = q_dequeue(client_connection_req_queue)) != NULL) {
-        printf("Processing client connection request: %s\n", (char*)msg);
-    }
-        
+    id_generator vid;
+    init_id_generator(&vid);
+
+
+    //create_vehicle(&vid, "John", "Porto", 10);
+    //create_vehicle(&vid, "Manuel", "Odessa", 200);
+    //create_vehicle(&vid, "Pimba", "Lisbon", 20333);
+    //create_vehicle(&vid, "Johnathan", "Jitomyr", 1);
+    vehicle_t* v = create_vehicle(&vid, "Andrew", "Merda", 100);
+    sleep(1);
+    start_vehicle_service(v);
+
+    while(1) pause();
 
 
     return 0;

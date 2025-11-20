@@ -5,17 +5,22 @@
 
 
 // Every "tick" of the controller timer will take this many milliseconds
-#define TIMER_TICK_SPEED_SECONDS 1
+// Sets it for the vehicle too via enviromental variable before calling exec for sincronisation purpuses  
+#define TIMER_TICK_SPEED_MILLISECONDS 500
 
 
-#define CONTROLLER_ENTRY_FIFO_PATH "/tmp/controller_connection_gateway"
 
 #define CLIENT_NAME_MAX_LENGTH 32
-#define MAX_USER_SESSIONS_NUM 5 
+#define MAX_USER_SESSIONS_NUM 10 
+
+
+// Paths 
+#define CONTROLLER_CONNECITON_FIFO_PATH "/tmp/controller_connection_gateway"
+#define PATH_TO_VEHICLE_EXECUTABLE "../vehicle/build/vehicle"
 
 
 
-
+// Pretty terminal tags
 #define COLOR_RED     "\x1b[31m"
 #define COLOR_PURPLE  "\x1b[35m"
 #define COLOR_RESET   "\x1b[0m"

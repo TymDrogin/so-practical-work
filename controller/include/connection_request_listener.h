@@ -5,14 +5,14 @@
 // This file contains a fifo listener thread, that is going to concurrently safe enqueue users that ask for connection
 // While the main controller loop will dequeue and process them when it is ready
 
-#include <pthread.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <string.h>
+#include <pthread.h>   // pthread_t, pthread_create
+#include <stdio.h>     // printf, perror
+#include <stdlib.h>    // exit
+#include <unistd.h>    // read, close, unlink
+#include <fcntl.h>     // open, O_RDONLY, etc.
+#include <errno.h>     // errno, EINTR
+#include <sys/stat.h>  // mkfifo
+#include <string.h>    // For string manipulation if needed (e.g., memset)
 
 #include "settings.h"
 #include "utils.h"
@@ -21,4 +21,3 @@
 // Start the connection request fifo listener thread. It will read client names from the fifo and enqueue them to the provided client queue.
 
 void start_connection_request_listener_thread(queue* client_connection_req_queue);
-queue* dequeue_client_connection_request(queue* client_connection_req_queue);

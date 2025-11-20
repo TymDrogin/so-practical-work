@@ -25,7 +25,7 @@ void* timer_worker(void* arg) {
         (*ticks_counter)++;
         
         pthread_mutex_unlock(&timer_mutex);
-        sleep(TIMER_TICK_SPEED_SECONDS);
+        usleep(TIMER_TICK_SPEED_MILLISECONDS * 1000);
     }
 
     return NULL;

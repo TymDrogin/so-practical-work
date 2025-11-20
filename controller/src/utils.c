@@ -20,24 +20,38 @@ int is_named_pipe_exists(char* pipe_path) {
     struct stat st;
     return stat(pipe_path, &st) == 0;
 }
-void create_named_pipe(char* pipe_path) {
-    if (pipe_path == NULL) {
-        printf(ERROR "Pipe path is NULL.\n");
+void create_named_pipe(char* pipe_name, char* pipe_path_base) {
+    if (pipe_name == NULL|| pipe_path_base == NULL) {
+        printf(ERROR "One or more arguments passed to the create pipe function is NULL.\n");
         exit(EXIT_FAILURE);
     }
 
+
+    char full_path[256]; 
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path_base, pipe_name);
+
     // Remove any existing file or pipe at the same path
-    if (unlink(pipe_path) == -1 && errno != ENOENT) {
-        printf(ERROR "Failed to remove existing file or pipe at %s: ", pipe_path);
+    if (unlink(full_path) == -1 && errno != ENOENT) {
+        printf(ERROR "Failed to remove existing file or pipe at %s: ", full_path);
         exit(EXIT_FAILURE);
     }
 
     // Create the FIFO (named pipe) with rw permissions for all
-    if (mkfifo(pipe_path, 0666) == -1) {
-        printf(ERROR "Failed to create named pipe at %s: ", pipe_path);
+    if (mkfifo(full_path, 0666) == -1) {
+        printf(ERROR "Failed to create named pipe at %s: ", full_path);
         exit(EXIT_FAILURE);
     }
 }
+
+void remove_named_pipe(char* pipe_name, char* pipe_path_base) {
+    char full_path[256]; 
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path_base, pipe_name);
+    if (unlink(full_path) == -1 && errno != ENOENT) {
+        printf(ERROR "Failed to remove existing file or pipe at %s: ", full_path);
+        exit(EXIT_FAILURE);
+    }
+}
+
 
 
 

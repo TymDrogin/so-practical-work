@@ -27,7 +27,7 @@ int generate_id(id_generator* generator);
 
 
 int is_named_pipe_exists(char* pipe_path);
-void create_named_pipe(char* pipe_path);
+void create_named_pipe(char* pipe_name, char* pipe_path_base);
 
 
 
