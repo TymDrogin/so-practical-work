@@ -3,7 +3,10 @@
 
 
 // Every "tick" of the controller timer will take this many milliseconds
-#define TIMER_TICK_SPEED_SECONDS 1
+#define TIMER_TICK_SPEED_ENV "TIMER_TICK_SPEED_MILLISECONDS"
+#define TIMER_TICK_SPEED_DEFAULT 1000
+
+#define CLIENT_PIPE_PATH_BASE "/tmp/"
 
 #define COLOR_RED     "\x1b[31m"
 #define COLOR_PURPLE  "\x1b[35m"
@@ -16,7 +19,6 @@
 #define USAGE COLOR_RED "[USAGE] " COLOR_RESET
 #define VEHICLE COLOR_GREEN "[VEHICLE] " COLOR_RESET
 
-#define TIMER_TICK_SPEED_MILLISECONDS 1000
 
 
 #define CLIENT_NAME 1 
