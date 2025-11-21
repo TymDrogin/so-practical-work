@@ -3,6 +3,8 @@
 #include "connection_request_listener.h"
 #include "data_structures.h"
 #include "vehicle.h"
+#include "settings.h"
+#include "controller.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,10 +48,6 @@ void init(void) {
 
     printf(CONTROLLER "Controller initialized successfully.\n");
 }
-
-
-
-
 int main(int argc, char *argv[]) {
     init();
     void* msg;
@@ -57,16 +55,15 @@ int main(int argc, char *argv[]) {
     init_id_generator(&vid);
 
 
-    //create_vehicle(&vid, "John", "Porto", 10);
-    //create_vehicle(&vid, "Manuel", "Odessa", 200);
-    //create_vehicle(&vid, "Pimba", "Lisbon", 20333);
-    //create_vehicle(&vid, "Johnathan", "Jitomyr", 1);
-    vehicle_t* v = create_vehicle(&vid, "Andrew", "Merda", 100);
-    sleep(1);
-    start_vehicle_service(v);
+    const int TARGET_CONNECTIONS = 2;
 
-    while(1) pause();
+    printf(CONTROLLER "Waiting for %d clients to connect...\n", TARGET_CONNECTIONS);
 
+    // Busy wait with a small sleep – replace with condition variable if you prefer
+    while (q_size(client_connection_req_queue) < TARGET_CONNECTIONS) {
+        usleep(100 * 1000); // 100ms
+    }
+    
 
-    return 0;
 }
+

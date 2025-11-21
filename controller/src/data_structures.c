@@ -103,7 +103,7 @@ void q_destroy_queue(queue* q) {
     free(q);
 }
 
-array* d_create_array(int capacity, free_func_t free_func) {
+array* a_create_array(int capacity, free_func_t free_func) {
     if (capacity <= 0) {
         perror(ERROR "Attemt to create an array with invalid capacity");
         exit(EXIT_FAILURE);
@@ -127,7 +127,7 @@ array* d_create_array(int capacity, free_func_t free_func) {
     arr->free_func = free_func;
     return arr;
 }
-int d_push(array* arr, void* item) {
+int a_push(array* arr, void* item) {
     if (!arr) {
         perror(ERROR "d_push: arr is NULL\n");
         exit(EXIT_FAILURE);
@@ -144,7 +144,7 @@ int d_push(array* arr, void* item) {
     arr->data[arr->size] = item;
     return 0;
 }
-void* d_pop(array* arr) {
+void* a_pop(array* arr) {
     if (!arr) {
         perror(ERROR "d_pop: arr is NULL\n");
         exit(EXIT_FAILURE);
@@ -159,7 +159,7 @@ void* d_pop(array* arr) {
     return item;
 }
 
-void* d_get(const array* arr, int index) {
+void* a_get(const array* arr, int index) {
     if (!arr) {
         perror(ERROR "d_get: arr is NULL\n");
         exit(EXIT_FAILURE);
@@ -170,7 +170,7 @@ void* d_get(const array* arr, int index) {
     return arr->data[index];
 }
 
-int d_remove(array* arr, int index) {
+int a_remove(array* arr, int index) {
     if (!arr) {
         perror(ERROR "d_remove: arr is NULL\n");
         return -1;
@@ -195,17 +195,20 @@ int d_remove(array* arr, int index) {
 
     return 0;
 }
-int d_size(const array* arr) {
+int a_size(const array* arr) {
     return arr->size;
 }
-int d_capacity(const array* arr) {
+int a_capacity(const array* arr) {
     return arr->capacity;
 }
-void d_destroy_array(array* arr) {
+bool a_is_full(const array* arr) {
+    return arr->size >= arr->capacity;
+}
+void a_destroy_array(array* arr) {
     if (!arr) return;
 
     void* item;
-    while ((item = d_pop(arr)) != NULL) {
+    while ((item = a_pop(arr)) != NULL) {
         if (arr->free_func) {
             arr->free_func(item);
         } else {

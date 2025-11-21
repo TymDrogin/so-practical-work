@@ -45,17 +45,18 @@ typedef struct array {
     free_func_t free_func;
 } array;
 
-array* d_create_array(int capacity, free_func_t free_func);
+array* a_create_array(int capacity, free_func_t free_func);
 
-int d_push(array* arr, void* item);
-void* d_pop(array* arr);
+int a_push(array* arr, void* item);
+void* a_pop(array* arr);
 
-void* d_get(const array* arr, const int inxex);
-int d_remove(array* arr, const int index);
+void* a_get(const array* arr, const int inxex);
+int a_remove(array* arr, const int index);
 
 
-int d_size(const array* arr);
-int d_capacity(const array* arr);
-void d_destroy_array(array* arr);
+int a_size(const array* arr);
+int a_capacity(const array* arr);
+bool a_is_full(const array* arr);
+void a_destroy_array(array* arr);
 
 #endif // DATA_STRUCTURES_H

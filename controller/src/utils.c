@@ -1,5 +1,5 @@
 #include "utils.h"
-
+// Id generator utilities
 void init_id_generator(id_generator* generator) {
     generator->id = 0;
     if(pthread_mutex_init(&generator->mutex, NULL) != 0) {
@@ -16,9 +16,40 @@ int generate_id(id_generator* generator) {
     return id; 
 }
 
-int is_named_pipe_exists(char* pipe_path) {
+
+
+// Message utilities
+static void write_to_fifo(const char *fifo_name,
+                                 const char *fifo_path_base,
+                                 const char *message)
+{
+    char full_path[256];
+
+    // Build the full path: /base/path/pipe_name
+    snprintf(full_path, sizeof(full_path), "%s/%s",
+             fifo_path_base, fifo_name);
+
+    int fd = open(full_path, O_WRONLY | O_NONBLOCK);
+    if (fd < 0) {
+        perror("open client fifo");
+        return;
+    }
+
+    if (write(fd, message, strlen(message)) < 0) {
+        perror("write to client fifo");
+    }
+
+    close(fd);
+}
+
+
+// Pipe utilities
+int is_named_pipe_exists(char* pipe_name, char* pipe_path_base) {
+    char full_path[256]; 
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path_base, pipe_name);
+
     struct stat st;
-    return stat(pipe_path, &st) == 0;
+    return stat(full_path, &st) == 0;
 }
 void create_named_pipe(char* pipe_name, char* pipe_path_base) {
     if (pipe_name == NULL|| pipe_path_base == NULL) {
@@ -42,7 +73,6 @@ void create_named_pipe(char* pipe_name, char* pipe_path_base) {
         exit(EXIT_FAILURE);
     }
 }
-
 void remove_named_pipe(char* pipe_name, char* pipe_path_base) {
     char full_path[256]; 
     snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path_base, pipe_name);
@@ -51,10 +81,6 @@ void remove_named_pipe(char* pipe_name, char* pipe_path_base) {
         exit(EXIT_FAILURE);
     }
 }
-
-
-
-
 const char *get_line_from_buffer(const char *buffer, size_t buf_len, size_t *pos, size_t *line_len) {
     if (!buffer || !pos || !line_len || *pos >= buf_len)
     	return NULL;

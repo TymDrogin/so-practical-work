@@ -17,6 +17,7 @@
 // Paths 
 #define CONTROLLER_CONNECITON_FIFO_PATH "/tmp/controller_connection_gateway"
 #define PATH_TO_VEHICLE_EXECUTABLE "../vehicle/build/vehicle"
+#define PATH_TO_PROGRAM_PIPES_BASE "/tmp"
 
 
 
