@@ -52,8 +52,6 @@ void* a_pop(array* arr);
 
 void* a_get(const array* arr, const int inxex);
 int a_remove(array* arr, const int index);
-
-
 int a_size(const array* arr);
 int a_capacity(const array* arr);
 bool a_is_full(const array* arr);

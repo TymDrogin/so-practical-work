@@ -19,15 +19,14 @@ int generate_id(id_generator* generator) {
 
 
 // Message utilities
-static void write_to_fifo(const char *fifo_name,
-                                 const char *fifo_path_base,
-                                 const char *message)
-{
+void write_to_fifo(const char *pipe_path,
+                                 const char *pipe_name,
+                                 const char *message) {
     char full_path[256];
 
     // Build the full path: /base/path/pipe_name
     snprintf(full_path, sizeof(full_path), "%s/%s",
-             fifo_path_base, fifo_name);
+             pipe_path, pipe_name);
 
     int fd = open(full_path, O_WRONLY | O_NONBLOCK);
     if (fd < 0) {
@@ -44,22 +43,22 @@ static void write_to_fifo(const char *fifo_name,
 
 
 // Pipe utilities
-int is_named_pipe_exists(char* pipe_name, char* pipe_path_base) {
+int is_named_pipe_exists(char* pipe_path, char* pipe_name) {
     char full_path[256]; 
-    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path_base, pipe_name);
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path, pipe_name);
 
     struct stat st;
     return stat(full_path, &st) == 0;
 }
-void create_named_pipe(char* pipe_name, char* pipe_path_base) {
-    if (pipe_name == NULL|| pipe_path_base == NULL) {
+void create_named_pipe(char* pipe_path, char* pipe_name) {
+    if (pipe_name == NULL|| pipe_path == NULL) {
         printf(ERROR "One or more arguments passed to the create pipe function is NULL.\n");
         exit(EXIT_FAILURE);
     }
 
 
     char full_path[256]; 
-    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path_base, pipe_name);
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path, pipe_name);
 
     // Remove any existing file or pipe at the same path
     if (unlink(full_path) == -1 && errno != ENOENT) {
@@ -73,9 +72,9 @@ void create_named_pipe(char* pipe_name, char* pipe_path_base) {
         exit(EXIT_FAILURE);
     }
 }
-void remove_named_pipe(char* pipe_name, char* pipe_path_base) {
+void remove_named_pipe(char* pipe_path, char* pipe_name) {
     char full_path[256]; 
-    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path_base, pipe_name);
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path, pipe_name);
     if (unlink(full_path) == -1 && errno != ENOENT) {
         printf(ERROR "Failed to remove existing file or pipe at %s: ", full_path);
         exit(EXIT_FAILURE);

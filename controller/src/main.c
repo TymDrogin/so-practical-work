@@ -22,7 +22,8 @@ static queue* client_connection_req_queue;
 
 void cleanup(int signum) {
     printf("\n" CONTROLLER "Caught signal %d, cleaning up...\n", signum);
-    unlink(CONTROLLER_CONNECITON_FIFO_PATH); // Remove the FIFO
+    remove_named_pipe(PATH_TO_PROGRAM_PIPES_BASE, CONTROLLER_CONNECTION_PIPE_NAME);
+    printf(CONTROLLER "Cleanup complete, exiting.\n");
     exit(0);
 }
 

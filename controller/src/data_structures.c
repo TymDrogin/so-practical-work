@@ -45,7 +45,7 @@ int q_is_full(queue* q) {
     if (q->is_thread_safe) pthread_mutex_unlock(&q->mutex);
     return full;
 }
-int q_queue_size(queue* q) {
+int q_size(queue* q) {
     if (q->is_thread_safe) pthread_mutex_lock(&q->mutex);
     int size = q->count;
     if (q->is_thread_safe) pthread_mutex_unlock(&q->mutex);

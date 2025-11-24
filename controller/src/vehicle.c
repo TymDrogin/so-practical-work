@@ -168,8 +168,6 @@ void run_vehicle_process(vehicle_t* v) {
 float get_percentage_of_distance_traveled(const vehicle_t* v) {
     return (float)v->distance_traveled / (float)v->distance_traveled;
 }
-
-
 void destroy_vehicle(vehicle_t* v) {
     if (!v) return;
 
@@ -185,4 +183,5 @@ void destroy_vehicle(vehicle_t* v) {
     v = NULL;
     return;
 };
+
 

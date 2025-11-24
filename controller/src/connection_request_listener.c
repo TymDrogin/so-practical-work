@@ -10,7 +10,10 @@ void* connection_request_worker(void* arg) {
     queue* client_queue = (queue*)arg;
     char buffer[512];
 
-    int fd = open(CONTROLLER_CONNECITON_FIFO_PATH, O_RDONLY);
+    char full_path[256]; 
+    snprintf(full_path, sizeof(full_path), "%s/%s", PATH_TO_PROGRAM_PIPES_BASE, CONTROLLER_CONNECTION_PIPE_NAME);
+
+    int fd = open(full_path, O_RDONLY);
     if (fd == -1) {
         perror(ERROR "Could not open controller entry FIFO for reading");
         return NULL;
@@ -23,7 +26,7 @@ void* connection_request_worker(void* arg) {
             if (bytes_read == 0) {
                 // EOF – writer closed the FIFO, reopen it
                 close(fd);
-                fd = open(CONTROLLER_CONNECITON_FIFO_PATH, O_RDONLY);
+                fd = open(full_path, O_RDONLY);
                 if (fd == -1) {
                     perror(ERROR "Reopening FIFO failed");
                     return NULL;
@@ -52,13 +55,7 @@ void* connection_request_worker(void* arg) {
 
 // Perchance move pipe creation logic out of here to the controller initialization code
 void start_connection_request_listener_thread(queue* client_connection_req_queue) {
-    // Remove the pipe if it already exists
-    unlink(CONTROLLER_CONNECITON_FIFO_PATH); 
-
-    if(mkfifo(CONTROLLER_CONNECITON_FIFO_PATH, 0666) == -1) {
-        perror(ERROR "Could not create controller entry FIFO");
-        exit(1);
-    };
+    create_named_pipe(PATH_TO_PROGRAM_PIPES_BASE, CONTROLLER_CONNECTION_PIPE_NAME);
 
     if (is_spawned) {
         printf(ERROR "Entry FIFO listener thread has already been started.\n");
