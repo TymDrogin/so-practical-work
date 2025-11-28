@@ -17,9 +17,9 @@
 #include <string.h>
 
 
-int is_named_pipe_exists(char* pipe_path);
-void create_named_pipe(char* pipe_name, char* pipe_path_base);
-void remove_named_pipe(char* pipe_name, char* pipe_path_base);
+int is_named_pipe_exists(char* pipe_path, char* pipe_name);
+void create_named_pipe(char* pipe_path, char* pipe_name);
+void remove_named_pipe(char* pipe_path, char* pipe_name);
 
 int is_controller_entry_pipe_exist(void);
 int is_client_pipe_exist(char* client_name);

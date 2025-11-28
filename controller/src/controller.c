@@ -317,9 +317,8 @@ void process_client_command(controller* c, client_session* s, char* line) {
         exit(EXIT_FAILURE);
     }
 
-    char cmd[32];
-    // Try parsing "<cmd> <args...>"
-    int n = sscanf(line, "%31s", cmd);
+    char cmd[64];
+
 
     if(strcmp(cmd, "solicitar") == 0) {
         // Client requests a new service

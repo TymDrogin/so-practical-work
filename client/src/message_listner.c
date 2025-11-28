@@ -10,7 +10,7 @@ void* message_listner_worker(void* arg) {
     char* client_name = (char*)arg;
 
     char full_path[256]; 
-    snprintf(full_path, sizeof(full_path), "%s/%s", CLIENT_PIPE_PATH, client_name);
+    snprintf(full_path, sizeof(full_path), "%s/%s", PROGRAMS_BASE_PATH, client_name);
 
 
     int fd = open(full_path, O_RDONLY);
@@ -43,7 +43,24 @@ void* message_listner_worker(void* arg) {
         }
 
         buffer[bytes_read] = '\0';
+
+        // Remove the last newline character for pretty printing
+        for(int i = bytes_read -1; i >=0; i--) {
+            if(buffer[i] == '\n') {
+                buffer[i] = '\0';
+                break;
+            }
+        }
+        
+
+        // Move to line beggining
+        printf("\r");
+        printf("\x1b[33m[MSG]:\x1b[0m ");
         printf(buffer);
+
+        // Reprint cursor symbol
+        printf("\n>");
+        fflush(stdout);
     }
 
     close(fd);
@@ -56,7 +73,6 @@ void start_message_listner_thread(char* client_name) {
         printf(ERROR "Client pipe has not been created, listening thread failed");
         exit(0);
     }
-    // Remove the pipe if it already exists
     if(is_spawned) {
         printf(ERROR "Creating a second message listner thread is forbiden.\n");
         exit(1);
