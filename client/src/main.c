@@ -22,25 +22,7 @@
 #include "common.h"
 #include "message_listner.h"
 #include "utils.h"
-static char* client_name;
-
-
-void application_termination_handler(int signum) {
-    printf(INFO "Terminating client session");
-    remove_named_pipe(client_name, CLIENT_PIPE_PATH);
-    exit(1);
-    
-}
-
-void init() {
-    struct sigaction sa = {0};
-    sa.sa_handler = application_termination_handler;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);
-
-    start_message_listner_thread(client_name);
-}
-
+#include "logic.h"
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -52,16 +34,43 @@ int main(int argc, char *argv[]) {
         printf(INFO " Client name: %s\n", argv[1]);
     }
 
-    client_name = argv[1];
+    char* client_name = argv[1];
 
-    if(is_client_pipe_exist(client_name)) {
-        printf(INFO "Can't connect as the other client session with this name is running");
-        exit(1);
-    } else { 
-        create_named_pipe(client_name, CLIENT_PIPE_PATH);
+    init(client_name);
+
+
+
+
+    char buf[256];
+    printf("> ");
+
+    // Get user commands
+    // Works in tandem with message listener thread
+    while (1) {
+        fflush(stdout);
+
+        if (!fgets(buf, sizeof(buf), stdin))
+            break;
+
+        // Remove newline
+        buf[strcspn(buf, "\n")] = 0;
+
+        // If user pressed Enter (empty input)
+        if (buf[0] == '\0') {
+            printf("> ");
+            continue;
+        }
+        bool valid = validate_client_command(buf);
+        if (valid) {
+            printf("> Command valid!\n");
+        } else {
+            printf("> Invalid command!\n");
+        }
+
+        printf("> ");
+        fflush(stdout);
     }
 
-    init();
     while(1) pause();
 
 

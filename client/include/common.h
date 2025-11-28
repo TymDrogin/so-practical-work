@@ -1,5 +1,3 @@
-#define CONTROLLER_ENTRY_FIFO_PATH "/tmp/controller_entry_fifo"
-
 #define COLOR_RED     "\x1b[31m"
 #define COLOR_PURPLE  "\x1b[35m"
 #define COLOR_RESET   "\x1b[0m"
@@ -12,4 +10,5 @@
 #define _POSIX_C_SOURCE 200809L
 
 
-#define CLIENT_PIPE_PATH "/tmp/"
+#define PROGRAMS_BASE_PATH "/tmp"
+#define CONTROLLER_ENTRY_FIFO_NAME "controller_connection_gateway"
