@@ -16,6 +16,43 @@ int read_tick_spead_from_enviroment() {
     return tick_speed;
 }
 
+int is_named_pipe_exists(const char* pipe_path, const char* pipe_name) {
+    char full_path[256]; 
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path, pipe_name);
+
+    struct stat st;
+    return stat(full_path, &st) == 0;
+}
+void create_named_pipe(const char* pipe_path, const char* pipe_name) {
+    if (pipe_name == NULL|| pipe_path == NULL) {
+        printf(ERROR "One or more arguments passed to the create pipe function is NULL.\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    char full_path[256]; 
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path, pipe_name);
+
+    // Remove any existing file or pipe at the same path
+    if (unlink(full_path) == -1 && errno != ENOENT) {
+        printf(ERROR "Failed to remove existing file or pipe at %s: ", full_path);
+        exit(EXIT_FAILURE);
+    }
+
+    // Create the FIFO (named pipe) with rw permissions for all
+    if (mkfifo(full_path, 0666) == -1) {
+        printf(ERROR "Failed to create named pipe at %s: ", full_path);
+        exit(EXIT_FAILURE);
+    }
+}
+void remove_named_pipe(const char* pipe_path, const char* pipe_name) {
+    char full_path[256]; 
+    snprintf(full_path, sizeof(full_path), "%s/%s", pipe_path, pipe_name);
+    if (unlink(full_path) == -1 && errno != ENOENT) {
+        printf(ERROR "Failed to remove existing file or pipe at %s: ", full_path);
+        exit(EXIT_FAILURE);
+    }
+}
 
 
 static void write_to_client_fifo(const char *client_pipe_name,
@@ -44,15 +81,19 @@ static void write_to_client_fifo(const char *client_pipe_name,
 
 void send_tenth_of_distance_traveled_message_to_controller(int traveled) {
 	printf("DISTANCE=%d\n", traveled);
+    fflush(stdout);
 }
 void send_arrived_message_to_controler() {
 	printf("INFO=ARRIVED\n");
+    fflush(stdout);
 }
 void send_service_start_message_to_controller() {
 	printf("INFO=START\n");
+    fflush(stdout);
 }
 void send_termination_message_to_controller() {
 	printf("INFO=TERMINATED\n");
+    fflush(stdout);
 }
 
 

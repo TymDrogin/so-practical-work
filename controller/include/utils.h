@@ -26,9 +26,9 @@ void init_id_generator(id_generator* generator);
 int generate_id(id_generator* generator);
 
 
-int is_named_pipe_exists(char* pipe_path, char* pipe_name);
-void create_named_pipe(char* pipe_path, char* pipe_name);
-void remove_named_pipe(char* pipe_path, char* pipe_name);
+int is_named_pipe_exists(const char* pipe_path,const char* pipe_name);
+void create_named_pipe(const char* pipe_path, const char* pipe_name);
+void remove_named_pipe(const char* pipe_path, const char* pipe_name);
 
 void write_to_fifo(const char *pipe_path,
                                  const char *pipe_name,

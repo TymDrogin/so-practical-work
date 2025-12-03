@@ -28,13 +28,82 @@ vehicle_t* create_vehicle(id_generator* g, char* client_name, char* destination,
     }
     v->distance_to_travel = distance_to_travel;
 
-    v->is_performing_service = false;
-
+    v->distance_traveled = 0;
     // Spin the vehicle process
     run_vehicle_process(v);
 
     return v;
 }
+
+// Forks + execs
+void run_vehicle_process(vehicle_t* v) {
+    if (v == NULL) {
+        perror(ERROR "Run vehicle function got null");
+        exit(EXIT_FAILURE);
+
+    }
+
+    if(pipe(v->fd) != 0) {
+        perror(ERROR "Could not create an annonimous pipe for the vehicle");
+        exit(EXIT_FAILURE);
+    }
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        // -----CHILD PROCESS-----
+
+        // Close the read end, child only writes
+        close(v->fd[0]);
+        // Redirect stdout → pipe write end
+        if (dup2(v->fd[1], STDOUT_FILENO) < 0) {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
+        // Don't buffer stdout of the child
+        //setvbuf(stdout, NULL, _IOLBF, 0);
+
+        //// After duplicating, close original fd
+        close(v->fd[1]);
+
+        char distance[20], id[20];
+        snprintf(distance, sizeof(distance), "%d", v->distance_to_travel);
+        snprintf(id, sizeof(id), "%d", v->id);
+
+        // Prepare arguments for execve
+        char* args[] = {
+            "vehicle", 
+            v->client_name, 
+            v->destination, 
+            distance, 
+            id, 
+            NULL,
+        };  
+
+        // Prepare environment variables, this sets the timer tick speed for the vehicle process
+        char envbuf[64];
+        snprintf(envbuf, sizeof(envbuf), "TIMER_TICK_SPEED_MILLISECONDS=%d", TIMER_TICK_SPEED_MILLISECONDS);
+        char* envp[] = {
+            envbuf,
+            NULL
+        };
+
+        execve(PATH_TO_VEHICLE_EXECUTABLE, args, envp);
+
+        perror(ERROR "Exec failed");
+        exit(EXIT_FAILURE);
+    } else {
+        // -----PARENT PROCESS-----
+        v->pid = pid;
+        v->is_alive = true;
+
+        // Parent closes the write end
+        close(v->fd[1]);
+        return;
+    }
+}
+
+
+
 void print_vehicle_info(const vehicle_t* v) {
     if (v == NULL) {
         printf("[VEHICLE] (null pointer)\n");
@@ -52,11 +121,48 @@ void print_vehicle_info(const vehicle_t* v) {
     printf("Distance Traveled: %d\n", v->distance_traveled);
 
     printf("Is Alive: %s\n", v->is_alive ? "true" : "false");
-    printf("Is Performing Service: %s\n", v->is_performing_service ? "true" : "false");
 
     printf("Pipe FD: [%d, %d]\n", v->fd[0], v->fd[1]);
     printf("====================\n");
 }
+bool read_vehicle_messages(vehicle_t* v, queue* q) {
+    if (v == NULL) {
+        perror(ERROR "read_vehicle_messages: vehicle is NULL");
+        exit(EXIT_FAILURE);
+    }
+    if (q == NULL) {
+        perror(ERROR "read_vehicle_messages: queue is NULL");
+        exit(EXIT_FAILURE);
+    }
+
+    char buffer[512];
+    ssize_t bytes_read = read(v->fd[0], buffer, sizeof(buffer) - 1);
+
+    if (bytes_read < 0) {
+        if (errno == EINTR || errno == EAGAIN) {
+            // no data available for now
+            return false;
+        }
+        perror(ERROR "read_vehicle_messages: Failed to read from vehicle pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    if (bytes_read == 0) {
+        // Child closed its write end -> EOF
+        v->is_alive = false;
+        return false;
+    }
+
+    // bytes_read > 0 -- valid data
+    buffer[bytes_read] = '\0';
+    // push each newline-terminated line
+    read_lines_from_buffer_to_queue(q, buffer, bytes_read);
+
+    return true;
+}
+
+
+
 
 void start_vehicle_service(vehicle_t* v) {
     if(v == NULL) {
@@ -68,22 +174,20 @@ void start_vehicle_service(vehicle_t* v) {
         exit(EXIT_FAILURE);
 
     }
-    if(v->is_performing_service) {
-        perror("start_vehice: Attempted to start the vehicle that is already performing the service");
-        exit(EXIT_FAILURE);
-    }
+
     if(v->distance_to_travel <= 0) {
         perror(ERROR "Bad distance to travel has been set");
         exit(EXIT_FAILURE);
     }
-
+    // Wait just in case the process hasn't been done initializing
+    usleep(1000);
     // Start the vehicle
     if(kill(v->pid, SIGUSR2) == -1) {
         perror("start_vehicle: failed to send SIGUSR2");
         exit(EXIT_FAILURE);
     }
 
-    v->is_performing_service = true;
+    v->is_alive = true;
     return;
 
 };
@@ -97,72 +201,10 @@ void cancel_vehicle_service(vehicle_t* v) {
         exit(EXIT_FAILURE);
     }
     v->is_alive = false;
-    v->is_performing_service = false;
+    
     kill(v->pid, SIGUSR1);
     waitpid(v->pid, NULL, 0);
 
-}
-// Forks + execs
-void run_vehicle_process(vehicle_t* v) {
-    if (v == NULL) {
-        perror(ERROR "Run vehicle function got null");
-        exit(EXIT_FAILURE);
-
-    }
-
-    //if(pipe(v->fd) != 0) {
-    //    perror(ERROR "Could not create an annonimous pipe for the vehicle");
-    //    exit(EXIT_FAILURE);
-    //}
-
-    pid_t pid = fork();
-    if (pid == 0) {
-
-        // Close the read end, child only writes
-        //close(v->fd[0]);
-
-        //// Redirect stdout → pipe write end
-        //if (dup2(v->fd[1], STDOUT_FILENO) < 0) {
-        //    perror("dup2");
-        //    exit(EXIT_FAILURE);
-        //}
-
-        //// After duplicating, close original fd
-        //close(v->fd[1]);
-
-        char distance[20], id[20];
-        snprintf(distance, sizeof(distance), "%d", v->distance_to_travel);
-        snprintf(id, sizeof(id), "%d", v->id);
-
-        char* args[] = {
-            "vehicle", 
-            v->client_name, 
-            v->destination, 
-            distance, 
-            id, 
-            NULL,
-        };  
-
-        char envbuf[64];
-        snprintf(envbuf, sizeof(envbuf), "TIMER_TICK_SPEED_MILLISECONDS=%d", TIMER_TICK_SPEED_MILLISECONDS);
-        char* envp[] = {
-            envbuf,
-            NULL
-        };
-
-        execve(PATH_TO_VEHICLE_EXECUTABLE, args, envp);
-
-        perror(ERROR "Exec failed");
-        exit(EXIT_FAILURE);
-    } else {
-        // Parent 
-        v->pid = pid;
-        v->is_alive = true;
-
-        // Parent closes the write end
-        //close(v->fd[1]);
-        return;
-    }
 }
 
 float get_percentage_of_distance_traveled(const vehicle_t* v) {
