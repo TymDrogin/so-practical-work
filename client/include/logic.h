@@ -16,6 +16,9 @@
 
 
 
+void application_termination_handler(int signum);
+
+
 
 bool validate_client_command(const char* command);
 

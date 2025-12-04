@@ -59,7 +59,9 @@ typedef struct controller {
 } controller;
 
 // Creates and initializes a new controller instance with given parameters
-controller* create_controller(const int max_num_of_user_sessions, const int max_num_of_vehicles, const int max_num_of_services, const int max_num_of_requests);
+controller* create_controller(const int max_num_of_user_sessions,
+    const int max_num_of_vehicles, 
+    const int max_num_of_requests);
 
 
 // CONTROLLER LOOP
@@ -75,7 +77,6 @@ controller* create_controller(const int max_num_of_user_sessions, const int max_
 bool is_client_connected_by_name(const controller* c, const char* client_name);
 bool is_client_connected_by_id(const controller* c, const int id);
 
-// Can return null
 client_session* get_client_session_by_name(const controller* c, const char* client_name);
 client_session* get_client_session_by_id(const controller* c, const int id);
 
@@ -83,12 +84,9 @@ request* get_request_by_id(const controller* c, const int id);
 
 
 
-
-// Attempts to connect a client with given name to the controller
-// Returns true on success, false if client with the same name is already connected
-// Notifies the client about the connection result, and the controller admin in case of fatal errors
+// -- CLIENT CONNECTION/DISCONNECTION LOGIC 
 bool connect_client(controller* c, const char* client_name);
-void start_client_session(client_session* s);
+void serve_connection_requests(controller* c, queue* client_connection_req_queue);
 
 
 // Frees all resources associated with the client and disconnects them from the controller.
@@ -99,14 +97,17 @@ void disconnect_client_by_name(controller* c, const char* client_name);
 void terminate_client_session(controller* c, client_session* s);
 
 
+void disconnect_all_clients(controller* c);
 
 
 
 
 
-void process_clients_connection_requests(controller* c, queue* connection_request_queue);
+void print_full_session_info(client_session* s);
 
-// VEhicle messages
+
+
+
 void process_vehicle_message(controller* c, vehicle_t* v, request* r, const char* message);
 
 // arrived - set status to alive
@@ -120,6 +121,8 @@ void process_vehicle_message(controller* c, vehicle_t* v, request* r, const char
 // ADMIN COMMAND PROCESSING
 void process_admin_command(controller* c, char* command);
 
+void utiliz(const controller* c);
+
 
 
 
@@ -131,12 +134,17 @@ void process_client_command(controller* c, client_session* s, char* command);
 void agendar(controller* c, client_session* s, int start_time, const char* destination, int distance);
 
 
-// MESSAGES TO CLIENTS AND CONTROLLER ADMINISTRATOR 
+// MESSAGES TO CLIENTS
 void message_client_connection_accepted(const char* client_name);
 void message_client_connection_rejected(const char* client_name, const char* reason);
 void message_client_disconnection_notice(const char* client_name);
 void message_client_request_creation_accepted(const char* client_name, int request_id);
 void message_client_request_creation_rejected(const char* client_name, const char* reason);
+
+// CONTROLLER MESSAGES 
+
+void message_controller_client_connected(const client_session* s);
+void message_controller_client_connection_denied(const char* client_name, const char* reason);
 
 
 

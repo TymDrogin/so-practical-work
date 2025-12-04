@@ -42,7 +42,7 @@ void* connection_request_worker(void* arg) {
         }
         buffer[bytes_read] = '\0';
         // Process buffered up data 
-        if (read_lines_from_buffer_to_queue(client_queue, buffer, bytes_read) != 0) {
+        if (read_lines_from_buffer_to_queue(client_queue, buffer, bytes_read) == -1) {
             close(fd);
             return NULL;
         }

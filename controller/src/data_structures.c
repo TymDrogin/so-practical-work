@@ -68,10 +68,12 @@ int q_enqueue(queue* q, void* item) {
 }
 void* q_dequeue(queue* q) {
     if (q->is_thread_safe) pthread_mutex_lock(&q->mutex);
-    int is_empty = q->count == 0;
-    if (is_empty) {
+
+    if (q->count == 0) {
+        if (q->is_thread_safe) pthread_mutex_unlock(&q->mutex);
         return NULL;
     }
+
     void* item = q->data[q->front];
     q->front = (q->front + 1) % q->capacity;
     q->count--;
@@ -140,8 +142,8 @@ int a_push(array* arr, void* item) {
         perror(ERROR "d_push: array full (capacity=%d)\n", arr->capacity);
         return -1;
     }
-    arr->size++;
     arr->data[arr->size] = item;
+    arr->size++;
     return 0;
 }
 void* a_pop(array* arr) {

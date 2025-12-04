@@ -38,8 +38,8 @@ int main(int argc, char *argv[]) {
 
     init(client_name);
 
-
-
+    char client_to_controller_pipe_name[256];
+    snprintf(client_to_controller_pipe_name, sizeof(client_to_controller_pipe_name), "%s_to_controller", client_name);
 
     char buf[256];
     printf("> ");
@@ -52,19 +52,25 @@ int main(int argc, char *argv[]) {
         if (!fgets(buf, sizeof(buf), stdin))
             break;
 
-        // Remove newline
-        buf[strcspn(buf, "\n")] = 0;
 
         // If user pressed Enter (empty input)
-        if (buf[0] == '\0') {
+        if (strlen(buf) <= 1) {
             printf("> ");
             continue;
         }
         bool valid = validate_client_command(buf);
         if (valid) {
-            printf("> Command valid!\n");
+            fflush(stdout);
+            if(!is_named_pipe_exists(PROGRAMS_BASE_PATH, client_to_controller_pipe_name)) {
+                fprintf(stderr, "Controller to client pipe does not exist");
+                application_termination_handler(0);
+            }
+            // Send command
+            write_to_fifo(PROGRAMS_BASE_PATH, client_to_controller_pipe_name, buf);
         } else {
-            printf("> Invalid command!\n");
+            buf[strcspn(buf, "\n")] = 0;
+            printf("> Invalid command: %s\n", buf);
+            print_usage();
         }
 
         printf("> ");

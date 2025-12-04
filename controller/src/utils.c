@@ -34,7 +34,7 @@ void write_to_fifo(const char *pipe_path,
 
     int fd = open(full_path, O_WRONLY | O_NONBLOCK);
     if (fd < 0) {
-        perror("open client fifo");
+        fprintf(stderr, "Can't open the pipe with path %s", full_path);
         return;
     }
 

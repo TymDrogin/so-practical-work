@@ -8,7 +8,10 @@ void application_termination_handler(int signum) {
     fflush(stdout);
 
     // Even though the remove exist here, there is basically zero chance that illigal client will remove the pipe
-    remove_named_pipe(PROGRAMS_BASE_PATH, client_name_s);
+    if(is_client_pipe_exist(client_name_s)) {
+        remove_named_pipe(PROGRAMS_BASE_PATH, client_name_s);
+    }
+    
     exit(1);
     
 }
@@ -25,25 +28,31 @@ void init(char* client_name) {
         printf(ERROR "Please choose a different name and try again.\n");
         exit(1);
     }
-    // Check if controller entry pipe exists
-
-    if(!is_controller_entry_pipe_exist()) {
-        printf(ERROR "Controller appears to be offline. Please try again later.\n");
-        // TODO: exit(1);
-    }
 
     client_name_s = client_name;
-
     create_named_pipe(PROGRAMS_BASE_PATH, client_name);
     start_message_listner_thread(client_name);
 
-    // send connection request to controller
+    // send connection request 
+    if(!is_controller_entry_pipe_exist()) {
+        printf(ERROR "Controller appears to be offline. Please try again later.\n");
+        application_termination_handler(0);
+    }
+    write_to_fifo(PROGRAMS_BASE_PATH, CONTROLLER_ENTRY_FIFO_NAME, client_name);
 
-    // Wait for controller response (accept/reject)
+    // Wait for response
+    sleep(1);
 
-    // If accepted, continue
+    char client_to_controller_pipe_name[256];
+    // Build the full name: controller_to_<client_name>
+    snprintf(client_to_controller_pipe_name, sizeof(client_to_controller_pipe_name), "%s_to_controller", client_name_s);
 
-    // If rejected, cleanup and exit(1)
+    if(!is_named_pipe_exists(PROGRAMS_BASE_PATH, client_to_controller_pipe_name)) {
+        fprintf(stderr, "Controller hasn't created your pipe");
+        application_termination_handler(0);
+    }
+
+    printf(INFO " You are now connected to the system! Have fun! \n");
 }
 
 
@@ -63,7 +72,7 @@ bool validate_client_command(const char* command) {
         return false;
     }
 
-    if(strcmp(command, "consultar") == 0 || strcmp(command, "terminar") == 0) {
+    if(strncmp(command, "consultar", 9) == 0 || strncmp(command, "terminar", 8) == 0) {
         return true;
     }
 

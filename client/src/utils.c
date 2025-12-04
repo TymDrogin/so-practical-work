@@ -17,6 +17,29 @@ int is_client_pipe_exist(char* client_name) {
     return is_named_pipe_exists(PROGRAMS_BASE_PATH, client_name);
 }
 
+void write_to_fifo(const char *pipe_path,
+                                 const char *pipe_name,
+                                 const char *message) {
+    char full_path[256];
+
+    // Build the full path: /base/path/pipe_name
+    snprintf(full_path, sizeof(full_path), "%s/%s",
+             pipe_path, pipe_name);
+
+    int fd = open(full_path, O_WRONLY | O_NONBLOCK);
+    if (fd < 0) {
+        fprintf(stderr, "Can't open the pipe: %s/%s \n", pipe_path, pipe_name);
+        fflush(stderr);
+        return;
+    }
+
+    if (write(fd, message, strlen(message)) < 0) {
+        fprintf(stderr, "Can't write to the pipe: %s/%s", pipe_path, pipe_name);
+    }
+
+    close(fd);
+}
+
 
 
 
@@ -50,6 +73,8 @@ void remove_named_pipe(char* pipe_path, char* pipe_name) {
         exit(EXIT_FAILURE);
     }
 }
+
+
 
 
 void print_usage() {

@@ -97,10 +97,9 @@ void serve_request(controller* c, request* r) {
 
 controller* create_controller(const int max_num_of_user_sessions,
                               const int max_num_of_vehicles,
-                              const int max_num_of_services,
                               const int max_num_of_requests)
 {
-    if (max_num_of_user_sessions <= 0 || max_num_of_vehicles <= 0 || max_num_of_services <= 0) {
+    if (max_num_of_user_sessions <= 0 || max_num_of_vehicles <= 0 || max_num_of_requests <= 0) {
         perror(ERROR "Invalid controller limits\n");
         exit(EXIT_FAILURE);
     }
@@ -109,13 +108,14 @@ controller* create_controller(const int max_num_of_user_sessions,
     if (c == NULL) {
         perror(ERROR "Could not allocate memory for controller");
         exit(EXIT_FAILURE);
-    }
+    };
+
 
     // Initialize arrays
     // TODO: 
     c->sessions = a_create_array(max_num_of_user_sessions, NULL);
     c->vehicles = a_create_array(max_num_of_vehicles, NULL);
-    c->request = a_create_array(max_num_of_services, NULL);
+    c->request = a_create_array(max_num_of_requests, NULL);
 
     // Initialize ID generators
     c->vehicle_id_gen = malloc(sizeof(id_generator));
@@ -128,8 +128,8 @@ controller* create_controller(const int max_num_of_user_sessions,
 
     c->max_num_of_sessions  = max_num_of_user_sessions;
     c->max_num_of_vehicles  = max_num_of_vehicles;
-    c->max_num_of_services  = max_num_of_services;
     c->max_num_of_requests = max_num_of_requests;
+
 
     c->total_km_traveld_by_all_cars = 0;
 
@@ -138,124 +138,7 @@ controller* create_controller(const int max_num_of_user_sessions,
 
 
 
-void terminate_client_session(controller* c, client_session* s) {
-    if (c == NULL) {
-        fprintf(stderr, ERROR "terminate_client_session: controller is NULL\n");
-        exit(EXIT_FAILURE);
-    }
 
-    if (s == NULL) {
-        fprintf(stderr, ERROR "terminate_client_session: client_session is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // Removes the named pipe associated with the client session
-    remove_named_pipe(PATH_TO_PROGRAM_PIPES_BASE, s->client_to_controller_pipe);
-
-    // Notify the client about termination
-    message_client_disconnection_notice(s->client_name);
-
-    // Cancell all active services of the client? 
-
-    // Remove all client requests from the system?
-
-
-
-
-    // Free the session resources
-    free_client_session(s);
-
-    return;
-}
-
-
-bool connect_client(controller* c, const char* client_name) {
-    if (c == NULL) {
-        fprintf(stderr, ERROR "connect_client: controller is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (client_name == NULL) {
-        fprintf(stderr, ERROR "connect_client: client_name is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // Check if client is already connected
-    if (is_client_connected_by_name(c, client_name)) {
-        message_client_connection_rejected(client_name, "Client with this name is already connected.");
-        return false;
-    }
-    // Check if client pipe exists
-    if (!is_named_pipe_exists(PATH_TO_PROGRAM_PIPES_BASE, client_name)) {
-        // TODO: Message controller admin about failed connection attempt
-        return false;
-    }
-
-    // Check for available session slot
-    if (a_is_full(c->sessions)) {
-        message_client_connection_rejected(client_name, "No avaible connections slots.");
-        return false;
-    }
-
-    // Create new client session
-    client_session* s = create_client_session(
-        c->session_id_gen,
-        client_name
-    );
-    // Add session to controller's sessions array
-    // a_push should never fail here because we already checked for capacity
-    if (a_push(c->sessions, s) != 0) {
-        message_client_connection_rejected(client_name, "Failed to create a new session.");
-        free_client_session(s);
-        return false;
-    }
-
-    // Connection part
-    create_named_pipe(PATH_TO_PROGRAM_PIPES_BASE, s->client_to_controller_pipe);
-
-    s->is_active = true;
-
-    // Message success
-    message_client_connection_accepted(s->client_name);
-
-
-    return true;
-}
-
-void disconnect_client_by_name(controller* c, const char* client_name) {
-    if (c == NULL) {
-        fprintf(stderr, ERROR "disconnect_client: controller is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if (client_name == NULL) {
-        fprintf(stderr, ERROR "disconnect_client: client_name is NULL\n");
-        exit(EXIT_FAILURE);
-    }
-    // Find the session by client name
-    int count = a_size(c->sessions);
-    for (int i = 0; i < count; i++) {
-        client_session* s = a_get(c->sessions, i);
-        if(s == NULL) {
-            perror(ERROR "disconnect_client: Read null session");
-            exit(EXIT_FAILURE);
-        }
-        if(s->client_name == NULL) {
-            perror(ERROR "disconnect_client: Session client name is NULL");
-            exit(EXIT_FAILURE);
-        }
-        if (strcmp(s->client_name, client_name) == 0) {
-            // Found the session, remove it
-            a_remove(c->sessions, i);
-            terminate_client_session(c, s);
-            return;
-        }
-    }
-
-
-
-    // Client not found
-}
 
 bool is_client_connected_by_name(const controller* c, const char* client_name) {
     if (c == NULL) {
@@ -275,7 +158,7 @@ bool is_client_connected_by_name(const controller* c, const char* client_name) {
 
     int count = a_size(c->sessions);
     for (int i = 0; i < count; i++) {
-        client_session* s = a_get(c->sessions, i);
+        client_session* s = (client_session*)a_get(c->sessions, i);
         if(s == NULL) {
             perror(ERROR "is_client_connected_by_name: Read null session");
             exit(EXIT_FAILURE);
@@ -307,7 +190,7 @@ bool is_client_connected_by_id(const controller* c, const int id) {
     }
     int count = a_size(c->sessions);
     for(int i = 0; i < count; i++) {
-        client_session* s = a_get(c->sessions, i);
+        client_session* s = (client_session*)a_get(c->sessions, i);
         if(s == NULL) {
             perror(ERROR "is_client_connected_by_id: a_get got NULL session");
             exit(EXIT_FAILURE);
@@ -320,7 +203,6 @@ bool is_client_connected_by_id(const controller* c, const int id) {
 
 
 }
-
 
 client_session* get_client_session_by_name(const controller* c, const char* client_name) {
     if (c == NULL) {
@@ -379,6 +261,143 @@ client_session* get_client_session_by_id(const controller* c, const int id) {
     return NULL;
 }
 
+bool connect_client(controller* c, const char* client_name) {
+    if (c == NULL) {
+        fprintf(stderr, ERROR "connect_client: controller is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (client_name == NULL) {
+        fprintf(stderr, ERROR "connect_client: client_name is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Check if client is already connected
+    if (is_client_connected_by_name(c, client_name)) {
+        message_client_connection_rejected(client_name, "Client with this name is already connected.");
+        message_controller_client_connection_denied(client_name, "Client with this name is already connected to the system.");
+        return false;
+    }
+    // Check if client pipe exists
+    if (!is_named_pipe_exists(PATH_TO_PROGRAM_PIPES_BASE, client_name)) {
+        message_controller_client_connection_denied(client_name, "Client with this name has no pipe.");
+        return false;
+    }
+
+    // Check for available session slot
+    if (a_is_full(c->sessions)) {
+        message_client_connection_rejected(client_name, "No avaible connections slots.");
+        message_controller_client_connection_denied(client_name, "No available session slots in the system.");
+        return false;
+    }
+
+    char* name_copy = strdup(client_name);
+    // Create new client session
+    client_session* s = create_client_session(
+        c->session_id_gen,
+        name_copy
+    );
+    
+
+    // Add session to controller's sessions array
+    // a_push should never fail here because we already checked for capacity
+    if (a_push(c->sessions, s) != 0) {
+        message_client_connection_rejected(client_name, "Failed to create a new session.");
+        message_controller_client_connection_denied(client_name, "Failed to push the session to the array");
+        free_client_session(s);
+        return false;
+    }
+
+    // Connection part
+    create_named_pipe(PATH_TO_PROGRAM_PIPES_BASE, s->client_to_controller_pipe);
+
+    s->is_active = true;
+
+    // Message success
+    message_client_connection_accepted(s->client_name);
+    message_controller_client_connected(s);
+
+    fflush(stdout);
+
+    return true;
+}
+void serve_connection_requests(controller* c, queue* client_connection_req_queue) {
+    char* client_name;
+
+    while((client_name = q_dequeue(client_connection_req_queue)) != NULL) {
+        connect_client(c, client_name);
+        free(client_name);
+    }
+}
+
+
+
+void disconnect_client_by_name(controller* c, const char* client_name) {
+    if (c == NULL) {
+        fprintf(stderr, ERROR "disconnect_client: controller is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (client_name == NULL) {
+        fprintf(stderr, ERROR "disconnect_client: client_name is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+    // Find the session by client name
+    int count = a_size(c->sessions);
+    for (int i = 0; i < count; i++) {
+        client_session* s = a_get(c->sessions, i);
+        if(s == NULL) {
+            perror(ERROR "disconnect_client: Read null session");
+            exit(EXIT_FAILURE);
+        }
+        if(s->client_name == NULL) {
+            perror(ERROR "disconnect_client: Session client name is NULL");
+            exit(EXIT_FAILURE);
+        }
+        if (strcmp(s->client_name, client_name) == 0) {
+            // Found the session, remove it
+            a_remove(c->sessions, i);
+            terminate_client_session(c, s);
+            return;
+        }
+    }
+
+
+
+    // Client not found
+}
+void terminate_client_session(controller* c, client_session* s) {
+    if (c == NULL) {
+        fprintf(stderr, ERROR "terminate_client_session: controller is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (s == NULL) {
+        fprintf(stderr, ERROR "terminate_client_session: client_session is NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Removes the named pipe associated with the client session
+    remove_named_pipe(PATH_TO_PROGRAM_PIPES_BASE, s->client_to_controller_pipe);
+
+    // Notify the client about termination
+    message_client_disconnection_notice(s->client_name);
+
+    // Cancell all active services of the client? 
+
+    // Remove all client requests from the system?
+
+
+
+
+    // Free the session resources
+    free_client_session(s);
+
+    return;
+}
+
+
+
 
 
 
@@ -407,6 +426,7 @@ void process_admin_command(controller* c, char* line) {
 
     }
     if(strcmp(cmd, "utiliz") == 0) {
+        utiliz(c);
         // Prints information about connected clients, 
         // As well as the status of their servise
     }
@@ -437,6 +457,9 @@ void process_admin_command(controller* c, char* line) {
     }
 
     // Notify admin about unknown command
+}
+void utiliz(const controller* c) {
+
 }
 
 // CLIENT COMMANDS 
@@ -551,10 +574,26 @@ void message_client_request_creation_accepted(const char* client_name, int reque
     snprintf(message, sizeof(message), CONTROLLER "Your request has been created successfully. Request ID: %d\n", request_id);
     write_to_fifo(PATH_TO_PROGRAM_PIPES_BASE, client_name,  message);
 }
-
-// Message client can't create request with reason
 void message_client_request_creation_rejected(const char* client_name, const char* reason) {
     char message[256];
     snprintf(message, sizeof(message), CONTROLLER "Request creation rejected: %s\n", reason);
     write_to_fifo(PATH_TO_PROGRAM_PIPES_BASE, client_name,  message);
+}
+
+// CONTROLLER MESSAGES
+
+void message_controller_client_connected(const client_session* s) {
+    if(s == NULL) {
+        perror(ERROR "message_controller_client_connected: Can't notify about client connection, session is NULL");
+        exit(0);
+    }
+    if(s->client_name == NULL) {
+        perror(ERROR "message_controller_client_connected: Client name is null");
+        exit(0);
+    }
+    printf(CONTROLLER "Client %s connected to the system. Session id: %d \n", s->client_name, s->id);
+
+}
+void message_controller_client_connection_denied(const char* client_name, const char* reason) {
+    printf(CONTROLLER "Could not connect client %s, reason: %s \n", client_name, reason);
 }

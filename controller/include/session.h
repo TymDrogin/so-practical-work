@@ -22,11 +22,6 @@ client_session* create_client_session(id_generator* g, const char* client_name);
 void free_client_session(void* item);
 
 
-// Setrs the flags, creates pipes. Does
-void start_client_session(client_session* s);
-
-
-
 
 
 
