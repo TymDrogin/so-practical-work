@@ -90,6 +90,7 @@ void run_vehicle_process(vehicle_t* v) {
         execve(PATH_TO_VEHICLE_EXECUTABLE, args, envp);
 
         perror(ERROR "Exec failed");
+        fprintf(stderr, ERROR "PATH_TO_VEHICLE_EXECUTABLE='%s'\n", PATH_TO_VEHICLE_EXECUTABLE);
         exit(EXIT_FAILURE);
     } else {
         // -----PARENT PROCESS-----
@@ -196,15 +197,11 @@ void cancel_vehicle_service(vehicle_t* v) {
         perror(ERROR "cancel_vehicle_service: Got NULL pointer to the vehicle");
         exit(EXIT_FAILURE);
     }
-    if(!v->is_alive) {
-        perror(ERROR "cancel_vehicle_servise: Can't stop the vehicle that has been already stopped");
-        exit(EXIT_FAILURE);
+    if(v->is_alive) {
+        kill(v->pid, SIGUSR1);
     }
-    v->is_alive = false;
-    
-    kill(v->pid, SIGUSR1);
     waitpid(v->pid, NULL, 0);
-
+    v->is_alive = false;
 }
 
 float get_percentage_of_distance_traveled(const vehicle_t* v) {
@@ -217,13 +214,15 @@ void destroy_vehicle(vehicle_t* v) {
         kill(v->pid, SIGUSR1);
         waitpid(v->pid, NULL, 0);
     } 
+    v = NULL;
+    return;
+};
+
+void free_vehicle(void* item) {
+    vehicle_t* v = (vehicle_t *)item;
     free(v->client_name);
     free(v->destination);
     free(v);
-
-
-    v = NULL;
-    return;
 };
 
 

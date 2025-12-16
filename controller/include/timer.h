@@ -1,6 +1,8 @@
 #ifndef TIMER_H
 #define TIMER_H
 
+
+#define _GNU_SOURCE
 #include "settings.h"
 
 #include <pthread.h>

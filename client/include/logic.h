@@ -14,9 +14,10 @@
 
 #include <stdbool.h>
 
-
-
+void init(char* client_name);
 void application_termination_handler(int signum);
+
+extern volatile sig_atomic_t terminate_requested;
 
 
 

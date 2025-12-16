@@ -7,6 +7,8 @@ static int is_spawned = 0;
 
 // This function assumes there is going to be only one line per read call in the data
 void* connection_request_worker(void* arg) {
+    pthread_setname_np(pthread_self(), "req-listener");
+
     queue* client_queue = (queue*)arg;
     char buffer[512];
 

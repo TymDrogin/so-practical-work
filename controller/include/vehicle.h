@@ -47,6 +47,7 @@ void cancel_vehicle_service(vehicle_t* v);
 
 // Sends the termination signal if neccesesry, as well as frees all the resources associated with the vehicle
 void destroy_vehicle(vehicle_t* v);
+void free_vehicle(void* item);
 
 
 

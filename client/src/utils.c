@@ -26,7 +26,7 @@ void write_to_fifo(const char *pipe_path,
     snprintf(full_path, sizeof(full_path), "%s/%s",
              pipe_path, pipe_name);
 
-    int fd = open(full_path, O_WRONLY | O_NONBLOCK);
+    int fd = open(full_path, O_WRONLY);
     if (fd < 0) {
         fprintf(stderr, "Can't open the pipe: %s/%s \n", pipe_path, pipe_name);
         fflush(stderr);

@@ -5,6 +5,8 @@
 // This file contains a fifo listener thread, that is going to concurrently safe enqueue users that ask for connection
 // While the main controller loop will dequeue and process them when it is ready
 
+#define _GNU_SOURCE
+
 #include <pthread.h>   // pthread_t, pthread_create
 #include <stdio.h>     // printf, perror
 #include <stdlib.h>    // exit

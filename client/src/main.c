@@ -52,12 +52,12 @@ int main(int argc, char *argv[]) {
         if (!fgets(buf, sizeof(buf), stdin))
             break;
 
-
         // If user pressed Enter (empty input)
         if (strlen(buf) <= 1) {
             printf("> ");
             continue;
         }
+
         bool valid = validate_client_command(buf);
         if (valid) {
             fflush(stdout);
@@ -73,12 +73,14 @@ int main(int argc, char *argv[]) {
             print_usage();
         }
 
+        if (terminate_requested) {
+            application_termination_handler(0);
+        }
+
         printf("> ");
         fflush(stdout);
     }
-
     while(1) pause();
-
-
+    application_termination_handler(0);
     return 0;
 }

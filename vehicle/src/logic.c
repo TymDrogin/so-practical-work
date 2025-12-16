@@ -17,7 +17,7 @@ static volatile sig_atomic_t service_active = 0;
 
 void termination_routine() { 
     send_termination_message_to_controller();
-    //send_termination_message_to_client(client_name, CLIENT_PIPE_PATH_BASE, destination, was_completed);
+    send_termination_message_to_client(client_name, CLIENT_PIPE_PATH_BASE, destination, was_completed);
     exit(0);
 }
 
@@ -76,14 +76,13 @@ void init(int argc, char* argv[]) {
     // Unbuffer stdout so that the redirected output is immediate
 
     // Check to not get stuck in the loop 
-    //if(is_named_pipe_exists(CLIENT_PIPE_PATH_BASE, client_name) == false) {
+    if(is_named_pipe_exists(CLIENT_PIPE_PATH_BASE, client_name) == false) {
     //    termination_routine();
-    //}
+    }
 
 
     send_arrived_message_to_controler();
-    //send_arrived_message_to_client(client_name, CLIENT_PIPE_PATH_BASE, destination);
-    // UNCOMMENT FOR FINAL VERSION
+    send_arrived_message_to_client(client_name, CLIENT_PIPE_PATH_BASE, destination);
 
 
 }
@@ -96,7 +95,7 @@ void main_loop() {
 
     if(service_active) {
         send_service_start_message_to_controller();
-        //send_service_start_message_to_client(client_name, CLIENT_PIPE_PATH_BASE, destination);
+        send_service_start_message_to_client(client_name, CLIENT_PIPE_PATH_BASE, destination);
     } else {
         termination_routine();
     }

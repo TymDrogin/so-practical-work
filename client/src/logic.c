@@ -3,24 +3,34 @@
 
 static char* client_name_s = NULL;
 
-void application_termination_handler(int signum) {
-    printf("\n"INFO "Terminating client session \n");
-    fflush(stdout);
+/* Termination flag set by minimal signal handler. */
+volatile sig_atomic_t terminate_requested = 0;
 
-    // Even though the remove exist here, there is basically zero chance that illigal client will remove the pipe
-    if(is_client_pipe_exist(client_name_s)) {
-        remove_named_pipe(PROGRAMS_BASE_PATH, client_name_s);
-    }
-    
-    exit(1);
-    
+static void signal_handler(int signum) {
+    (void)signum;
+    terminate_requested = 1;
 }
 
+void application_termination_handler(int signum) {
+    char client_to_controller_pipe_name[256];
+    // Build the full name: controller_to_<client_name>
+    snprintf(client_to_controller_pipe_name, sizeof(client_to_controller_pipe_name), "%s_to_controller", client_name_s);
+
+    if(is_named_pipe_exists(PROGRAMS_BASE_PATH, client_to_controller_pipe_name)) {
+        write_to_fifo(PROGRAMS_BASE_PATH, client_to_controller_pipe_name, "terminar");
+    }
+
+    remove_named_pipe(PROGRAMS_BASE_PATH, client_name_s);
+    exit(1);
+}    
+    
+
 void init(char* client_name) {
-    // Set termination signal handler
+    // Set minimal termination signal handler (only sets flag)
     struct sigaction sa = {0};
-    sa.sa_handler = application_termination_handler;
+    sa.sa_handler = signal_handler;
     sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
     sigaction(SIGINT, &sa, NULL);
 
     if(is_client_pipe_exist(client_name)) {
@@ -29,18 +39,23 @@ void init(char* client_name) {
         exit(1);
     }
 
-    client_name_s = client_name;
+    client_name_s = strdup(client_name);
+
     create_named_pipe(PROGRAMS_BASE_PATH, client_name);
     start_message_listner_thread(client_name);
+
+
 
     // send connection request 
     if(!is_controller_entry_pipe_exist()) {
         printf(ERROR "Controller appears to be offline. Please try again later.\n");
-        application_termination_handler(0);
+        remove_named_pipe(PROGRAMS_BASE_PATH, client_name_s);
+        exit(0);
     }
+
+    // Connection request
     write_to_fifo(PROGRAMS_BASE_PATH, CONTROLLER_ENTRY_FIFO_NAME, client_name);
 
-    // Wait for response
     sleep(1);
 
     char client_to_controller_pipe_name[256];
@@ -49,7 +64,8 @@ void init(char* client_name) {
 
     if(!is_named_pipe_exists(PROGRAMS_BASE_PATH, client_to_controller_pipe_name)) {
         fprintf(stderr, "Controller hasn't created your pipe");
-        application_termination_handler(0);
+        remove_named_pipe(PROGRAMS_BASE_PATH, client_name);
+        exit(0);
     }
 
     printf(INFO " You are now connected to the system! Have fun! \n");
@@ -73,6 +89,9 @@ bool validate_client_command(const char* command) {
     }
 
     if(strncmp(command, "consultar", 9) == 0 || strncmp(command, "terminar", 8) == 0) {
+        return true;
+    }
+    if(strncmp(command, "terminar", 8) == 0) {
         return true;
     }
 

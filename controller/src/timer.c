@@ -12,6 +12,7 @@ static pthread_cond_t timer_cond = PTHREAD_COND_INITIALIZER;
 static int timer_ticks = 0;
 
 void* timer_worker(void* arg) {
+    pthread_setname_np(pthread_self(), "timer-worker");
     int* ticks_counter = (int*)arg;
 
     while (1) {
